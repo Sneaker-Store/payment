@@ -1,5 +1,6 @@
 from datetime import date, datetime
-from flask import Flask, request, render_template
+import requests
+from flask import Flask, request, render_template, make_response
 from flask_mongoengine import MongoEngine
 from httplib2 import Response
 import os   
@@ -10,11 +11,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
 app.debug = True
-# app.config['MONGO_URI'] = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' \
-#                                        + os.environ['MONGODB_PASSWORD'] \
-#                                        + '@' + os.environ['MONGODB_HOSTNAME'] \
-#                                        + ':27017/' + os.environ['MONGODB_DATABASE']
-app.config['MONGO_URI'] = "mongodb://localhost:27017/payment"
+app.config['MONGO_URI'] = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' \
+                                       + os.environ['MONGODB_PASSWORD'] \
+                                       + '@' + os.environ['MONGODB_HOSTNAME'] \
+                                       + ':27017/' + os.environ['MONGODB_DATABASE']
+#app.config['MONGO_URI'] = "mongodb://localhost:27017/payment"
 
 db = MongoEngine(app)
 
@@ -32,19 +33,26 @@ def home():
 
 @app.route("/payments", methods=['GET', 'POST'])
 def payments():
-    if request.method == 'GET':
-        global ammount
-        ammount = request.get_json(force=True)
-        print(ammount)
-        #ammount = ammount["ammount"]
 
-        res = Response("Payment Information")
-        res.status = 200
+    headers = {'token': request.headers['token'], 'email': request.headers['email']}
+    r = requests.get('http://localhost:5000/auth', headers=headers)
+    if r.status_code != 200:
+        return make_response(
+            "Not authenticated", r.status_code
+    )
+
+    # if request.method == 'GET':
+    #     global ammount
+    #     ammount = request.get_json(force=True)
+    #     print(ammount)
+    #     #ammount = ammount["ammount"]
+
+    #     res = Response("Payment Information")
+    #     res.status = 200
         
     
     if request.method == 'POST':
         body = request.get_json(force=True)
-        body["ammount"] = ammount
         body["date"] = datetime.today()
         payment = Payment(**body).save()
 

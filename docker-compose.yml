@@ -19,8 +19,8 @@ services:
       - appdata:/var/www
     depends_on:
       - mongodb
-    networks:
-      - backend
+    # networks:
+    #   - backend
   # Mongo DB database configuration
   mongodb:
     image: mongo:4.4.4
@@ -35,16 +35,41 @@ services:
       MONDODB_LOG_DIR: /dev/null
     volumes:
       - mongodbdata:/data/db
-    networks:
-      - backend
+    
+    # networks:
+    #   - backend
+
+  webserver:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    image: digitalocean.com/webserver:latest
+    container_name: webserver
+    restart: unless-stopped
+    environment:
+      APP_ENV: "prod"
+      APP_NAME: "webserver"
+      APP_DEBUG: "true"
+      SERVICE_NAME: "webserver"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginxdata:/var/log/nginx
+    depends_on:
+      - flask
+    # networks:
+    #   - frontend
 
   # networks:
   #   backend:
   #     driver: bridge
 
 
-  # volumes:
-  #   mongodbdata:
-  #     driver: local
-  #   appdata:
-  #     driver: local
+volumes:
+  mongodbdata:
+    driver: local
+  appdata:
+    driver: local
+  nginxdata:
+    driver: local
