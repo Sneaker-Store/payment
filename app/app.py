@@ -1,5 +1,8 @@
-from datetime import date, datetime
-import requests
+import datetime
+import logging
+import sys
+import psycopg2
+from psycopg2 import OperationalError
 from flask import Flask, request, render_template, make_response
 from flask_mongoengine import MongoEngine
 from httplib2 import Response
@@ -10,55 +13,46 @@ from pip import main
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.debug = True
-app.config['MONGO_URI'] = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' \
-                                       + os.environ['MONGODB_PASSWORD'] \
-                                       + '@' + os.environ['MONGODB_HOSTNAME'] \
-                                       + ':27017/' + os.environ['MONGODB_DATABASE']
-#app.config['MONGO_URI'] = "mongodb://localhost:27017/payment"
+app.config["DEBUG"] = True
 
-db = MongoEngine(app)
+def get_db_connection():
+    conn = psycopg2.connect(
+            dbname="paymentdb",
+            user=os.environ['pay'],
+            password=os.environ['payment'])
 
-class Payment(db.Document):
-    username = db.StringField(required=True)
-    date = db.DateTimeField()
-    products = db.DictField()
-    ammount = db.FloatField()
-
+    return conn
 
 
 @app.route("/")
 def home():
     return render_template('index.html')
 
-@app.route("/payments", methods=['GET', 'POST'])
+@app.route("/payments", methods=['POST'])
 def payments():
 
-    headers = {'token': request.headers['token'], 'email': request.headers['email']}
-    r = requests.get('http://localhost:5000/auth', headers=headers)
-    if r.status_code != 200:
-        return make_response(
-            "Not authenticated", r.status_code
-    )
-
-    # if request.method == 'GET':
-    #     global ammount
-    #     ammount = request.get_json(force=True)
-    #     print(ammount)
-    #     #ammount = ammount["ammount"]
-
-    #     res = Response("Payment Information")
-    #     res.status = 200
-        
+    # headers = {'token': request.headers['token'], 'email': request.headers['email']}
+    # r = requests.get('http://localhost:5000/auth', headers=headers)
+    
+    # if r.status_code != 200:
+    #     return make_response(
+    #         "Not authenticated", r.status_code
+    # )
     
     if request.method == 'POST':
         body = request.get_json(force=True)
-        body["date"] = datetime.today()
-        payment = Payment(**body).save()
+        insert_form = "INSERT INTO payment (username, data, ammount) VALUES ({}, {}, {});".format(body['username'], \
+            'NOW()', body['ammount'])
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(insert_form)
+        conn.commit()
+        cur.close()
+        conn.close()
 
         res = Response("Transaction complete!")
         res.status = 200
-
 
     return res
 
