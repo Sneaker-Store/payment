@@ -1,75 +1,26 @@
-version: '3'
+version: '3.8'
+
 services:
-  flask:
-    build:
-      context: app
-      dockerfile: Dockerfile
-    container_name: flask
-    image: digitalocean.com/flask-python:3.10.4
-    restart: unless-stopped
-    environment:
-      APP_ENV: "prod"
-      APP_DEBUG: "False"
-      APP_PORT: 5000
-      MONGODB_DATABASE: flaskdb
-      MONGODB_USERNAME: flaskpayment
-      MONGODB_PASSWORD: payment
-      MONGODB_HOSTNAME: mongodb
+  web:
+    build: ./app
+    command: python manage.py run -h 0.0.0.0
     volumes:
-      - appdata:/var/www
-    depends_on:
-      - mongodb
-    # networks:
-    #   - backend
-  # Mongo DB database configuration
-  mongodb:
-    image: mongo:4.4.4
-    container_name: paymentdb
-    restart: unless-stopped
-    command: mongod --auth
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: paymentdb
-      MONGO_INITDB_ROOT_PASSWORD: payment
-      MONGO_INITDB_DATABASE: flaskdb
-      MONGODB_DATA_DIR: /data/db
-      MONDODB_LOG_DIR: /dev/null
-    volumes:
-      - mongodbdata:/data/db
-    
-    # networks:
-    #   - backend
-
-  webserver:
-    build:
-      context: nginx
-      dockerfile: Dockerfile
-    image: digitalocean.com/webserver:latest
-    container_name: webserver
-    restart: unless-stopped
-    environment:
-      APP_ENV: "prod"
-      APP_NAME: "webserver"
-      APP_DEBUG: "true"
-      SERVICE_NAME: "webserver"
+      - ./app/:/usr/src/app/
     ports:
-      - "80:80"
-      - "443:443"
+      - 5000:5000
+    env_file:
+      - ./.env.dev
+
+
+  db:
+    image: postgres:13-alpine
     volumes:
-      - nginxdata:/var/log/nginx
-    depends_on:
-      - flask
-    # networks:
-    #   - frontend
-
-  # networks:
-  #   backend:
-  #     driver: bridge
-
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=payment
+      - POSTGRES_DB=paymentdb
 
 volumes:
-  mongodbdata:
-    driver: local
-  appdata:
-    driver: local
-  nginxdata:
-    driver: local
+  postgres_data:
+

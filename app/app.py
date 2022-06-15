@@ -1,60 +1,53 @@
-import datetime
-import logging
-import sys
-import psycopg2
-from psycopg2 import OperationalError
-from flask import Flask, request, render_template, make_response
+from datetime import date, datetime
+from flask import Flask, request, render_template, jsonify
 from flask_mongoengine import MongoEngine
 from httplib2 import Response
-import os   
-
-from pip import main
+import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config["DEBUG"] = True
+app.debug = True
+# app.config['MONGO_URI'] = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' \
+#                                        + os.environ['MONGODB_PASSWORD'] \
+#                                        + '@' + os.environ['MONGODB_HOSTNAME'] \
+#                                        + ':27017/' + os.environ['MONGODB_DATABASE']
+app.config['MONGO_URI'] = "mongodb://localhost:27017/payment"
 
-def get_db_connection():
-    conn = psycopg2.connect(
-            dbname="paymentdb",
-            user=os.environ['pay'],
-            password=os.environ['payment'])
+db = MongoEngine(app)
 
-    return conn
+
+class Payment(db.Document):
+    username = db.StringField(required=True)
+    date = db.DateTimeField()
+    products = db.DictField()
+    ammount = db.FloatField()
 
 
 @app.route("/")
 def home():
     return render_template('index.html')
 
+
 @app.route("/payments", methods=['POST'])
 def payments():
-
-    # headers = {'token': request.headers['token'], 'email': request.headers['email']}
-    # r = requests.get('http://localhost:5000/auth', headers=headers)
-    
-    # if r.status_code != 200:
-    #     return make_response(
-    #         "Not authenticated", r.status_code
-    # )
-    
     if request.method == 'POST':
         body = request.get_json(force=True)
-        insert_form = "INSERT INTO payment (username, data, ammount) VALUES ({}, {}, {});".format(body['username'], \
-            'NOW()', body['ammount'])
+        body["date"] = datetime.today()
+        payment = Payment(**body).save()
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute(insert_form)
-        conn.commit()
-        cur.close()
-        conn.close()
+        data = {'message':'Payment is processing'}
+        resp = jsonify(data, 200)
+    return resp
 
-        res = Response("Transaction complete!")
+
+@app.route("/paymentConfirmation", methods=['GET', 'POST'])
+def paymentConfirmation():
+    if request.method == 'POST':
+        res = Response("Payment confirmed")
         res.status = 200
-
     return res
+
 
 if __name__ == '__main__':
     app.run(debug=True)
