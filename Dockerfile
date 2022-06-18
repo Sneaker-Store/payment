@@ -1,15 +1,18 @@
-FROM python:3.10.4-alpine3.9
+FROM python:3.10-alpine
 
 LABEL MAINTAINER="Gabriel Saudade gabrielfsaudade@ua.pt"
 
 ENV GROUP_ID=1000 \
     USER_ID=1000
 
-WORKDIR /var/www/
+WORKDIR /app
 
-ADD ./requirements.txt /var/www/requirements.txt
+COPY ./requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt
-ADD . /var/www/
+
+
+COPY app/* /app/
+
 RUN pip install gunicorn
 
 # Creats a user with access only to /var/www
@@ -20,4 +23,4 @@ USER www
 
 EXPOSE 5000
 
-CMD [ "gunicorn", "-w", "4", "--bind", "0.0.0.0:5000", "wsgi"]
+CMD [ "gunicorn", "-w", "4", "--bind", "0.0.0.0:5000", "app:app"]

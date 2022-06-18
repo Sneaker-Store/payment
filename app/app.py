@@ -12,7 +12,7 @@ app.debug = True
 #                                        + os.environ['MONGODB_PASSWORD'] \
 #                                        + '@' + os.environ['MONGODB_HOSTNAME'] \
 #                                        + ':27017/' + os.environ['MONGODB_DATABASE']
-app.config['MONGO_URI'] = "mongodb://localhost:27017/payment"
+app.config['MONGO_URI'] = "mongodb://mongodb:27017/payment"
 
 db = MongoEngine(app)
 
@@ -26,7 +26,7 @@ class Payment(db.Document):
 
 @app.route("/")
 def home():
-    return render_template('index.html')
+    return "Payments API"
 
 
 @app.route("/payments", methods=['POST'])
