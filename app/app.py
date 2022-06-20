@@ -12,7 +12,11 @@ app.debug = True
 #                                        + os.environ['MONGODB_PASSWORD'] \
 #                                        + '@' + os.environ['MONGODB_HOSTNAME'] \
 #                                        + ':27017/' + os.environ['MONGODB_DATABASE']
-app.config['MONGO_URI'] = "mongodb://mongodb:27017/payment"
+
+with open("/tmp/secrets/secret", 'r') as f:
+    secret = f.read()
+
+app.config['MONGO_URI'] = secret
 
 db = MongoEngine(app)
 
