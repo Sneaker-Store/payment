@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: payment
-        image: registry.deti:5000/saudade/payment:v6
+        image: registry.deti:5000/saudade/payment:v7
         resources:
           requests:
             memory: "32Mi"
@@ -25,7 +25,7 @@ spec:
             memory: "128Mi"
             cpu: "500m"
         ports:
-        - containerPort: 8080
+        - containerPort: 5000
       volumes:
       - name: app-secret
         secret:
@@ -41,7 +41,7 @@ metadata:
 spec:
   ports:
   - port: 6000
-    targetPort: 6000
+    targetPort: 5000
   selector:
     app: payment
 
@@ -57,6 +57,8 @@ metadata:
     traefik.ingress.kubernetes.io/frontend-entry-points: http,https
     traefik.ingress.kubernetes.io/redirect-entry-point: https
     traefik.ingress.kubernetes.io/redirect-permanent: "true"
+    traefik.ingress.kubernetes.io/custom-response-headers: "Access-Control-Allow-Origin:*||Access-Control-Allow-Methods:GET,PUT,DELETE,POST,OPTIONS||Access-Control-Allow-Headers:auth,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range||Access-Control-Expose-Headers:Content-Length,Content-Range"
+
 spec:
   rules:
   - host: payment.k3s
