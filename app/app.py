@@ -13,7 +13,7 @@ app.debug = True
 #                                        + '@' + os.environ['MONGODB_HOSTNAME'] \
 #                                        + ':27017/' + os.environ['MONGODB_DATABASE']
 
-with open("/tmp/secrets/secret", 'r') as f:
+with open("/tmp/secret", 'r') as f:
     secret = f.read()
 
 app.config['MONGO_URI'] = secret
@@ -33,7 +33,7 @@ def home():
     return "Payments API"
 
 
-@app.route("/payments", methods=['POST'])
+@app.route("/payments", methods=['POST', 'GET'])
 def payments():
     if request.method == 'POST':
         body = request.get_json(force=True)

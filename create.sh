@@ -1,1 +1,1 @@
-kubectl create secret generic app-secret --from-file=secret   -n saudade
+kubectl create secret generic payment-secret --from-file=secret   -n saudade
