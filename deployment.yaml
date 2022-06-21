@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app
+  name: payment
   namespace: saudade
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: app
+      app: payment
   template:
     metadata:
       labels:
-        app: app
+        app: payment
     spec:
       containers:
-      - name: app
-        image: registry.deti:5000/saudade/app
+      - name: payment
+        image: registry.deti:5000/saudade/payment:v1
         resources:
           requests:
             memory: "32Mi"
@@ -29,87 +29,28 @@ spec:
       volumes:
       - name: app-secret
         secret:
-          secretName: app-secret
-
-
-# Create nginx deployment
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-  namespace: saudade
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nginx
-  strategy: {}
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-        - image: nginx:alpine
-          name: nginx
-          ports:
-            - containerPort: 80
-          resources: {}
-          volumeMounts:
-          - name: nginx-saudade-pvc
-            mountPath: /var/www/static
-          - name: nginx-conf
-            mountPath: /etc/nginx/nginx.conf
-            subPath: nginx.conf
-            readOnly: true
-      restartPolicy: Always
-      volumes:
-      - name: nginx-saudade-pvc
-        persistentVolumeClaim:
-          claimName: nginx-saudade-pvc
-      - name: nginx-conf
-        configMap:
-          name: nginx-conf
-          items:
-             - key: nginx.conf
-               path: nginx.conf
+          secretName: payment-secret
 
 # CREATE SERVICE FOR APP
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: app
+  name: paymentservice
   namespace: saudade
 spec:
   ports:
-  - port: 8080
-    targetPort: 8080
+  - port: 6000
+    targetPort: 6000
   selector:
-    app: app
-
-
-# Create Service for APP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx
-  namespace: saudade
-spec:
-  ports:
-  - port: 80
-    targetPort: 80
-  selector:
-    app: nginx
+    app: payment
 
 # Configure Traefik
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: saudade-app-k3s
+  name: payment-k3s
   namespace: saudade
   annotations:
     kubernetes.io/ingress.class: traefik
@@ -118,45 +59,13 @@ metadata:
     traefik.ingress.kubernetes.io/redirect-permanent: "true"
 spec:
   rules:
-  - host: payment-saudade.k3s
+  - host: payment.k3s
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: nginx
+            name: paymentservice
             port: 
-              number: 80
-
-# NGINX Config map
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-conf
-  namespace: saudade
-data:
-  nginx.conf: |
-    user  nginx;
-    worker_processes  1;
-    error_log  /var/log/nginx/error.log warn;
-    pid        /var/run/nginx.pid;
-    events {
-            worker_connections  1024;
-    }
-    http {
-        include       /etc/nginx/mime.types;
-        default_type  application/octet-stream;
-        sendfile        on;
-        server {
-            listen 80 default_server;
-            server_name app.k3s;
-            location / {
-                proxy_pass http://app:8080/;
-             }
-            location /static {
-                root /var/www;
-           }
-        }
-    }
+              number: 6000
