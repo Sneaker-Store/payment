@@ -1,3 +1,4 @@
 flask_mongoengine
 Flask~=2.1.2
 httplib2~=0.20.4
+flask_cors

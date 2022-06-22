@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from flask import Flask, request, render_template, jsonify
 from flask_mongoengine import MongoEngine
+from flask_cors import CORS
 from httplib2 import Response
 import os
 
@@ -8,10 +9,6 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
 app.debug = True
-# app.config['MONGO_URI'] = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' \
-#                                        + os.environ['MONGODB_PASSWORD'] \
-#                                        + '@' + os.environ['MONGODB_HOSTNAME'] \
-#                                        + ':27017/' + os.environ['MONGODB_DATABASE']
 
 with open("/tmp/secret", 'r') as f:
     secret = f.read()
@@ -19,7 +16,7 @@ with open("/tmp/secret", 'r') as f:
 app.config['MONGO_URI'] = secret
 
 db = MongoEngine(app)
-
+CORS(app)
 
 class Payment(db.Document):
     username = db.StringField(required=True)
@@ -35,6 +32,7 @@ def home():
 
 @app.route("/payments", methods=['POST', 'GET'])
 def payments():
+    resp = ""
     if request.method == 'POST':
         body = request.get_json(force=True)
         body["date"] = datetime.today()
@@ -47,7 +45,7 @@ def payments():
 
 @app.route("/paymentConfirmation", methods=['GET', 'POST'])
 def paymentConfirmation():
-    if request.method == 'POST':
+    if request.method == 'GET':
         res = Response("Payment confirmed")
         res.status = 200
     return res

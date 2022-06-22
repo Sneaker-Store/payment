@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pv-claim
+  namespace: saudade
+  labels:
+    app: mariadb-notify
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 300M
+---
+apiVersion: apps/v1
+kind: Deployment # what to create?
+metadata:
+  name: mariadb-notify
+  namespace: saudade
+spec: # specification for deployment resource
+  replicas: 1 # how many replicas of pods we want to create
+  selector:
+    matchLabels:
+      app: mariadb-notify
+  template: # blueprint for pods
+    metadata:
+      labels:
+        app: mariadb-notify # service will look for this label
+    spec: # specification for pods
+      containers: # we can have one or more containers
+      - name: mariadb
+        image: registry.deti:5000/saudade/mongo:v2
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mariadb-pv
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mariadb-pv
+        persistentVolumeClaim:
+          claimName: mariadb-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentmongodb
+  namespace: saudade
+spec:
+  selector:
+    app: mariadb-notify
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
