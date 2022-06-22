@@ -25,7 +25,7 @@ flask run
 
 an then open the browser in:
 ```bash
-http://localhost:8080/
+http://localhost:5000/
 ```
 
 ## Running with docker 
@@ -33,30 +33,43 @@ http://localhost:8080/
 To run the server on a Docker container, please execute the following from the root directory:
 
 ```bash
-# sbuilding the image
+# Building the image
 sudo docker build -t app .
 ```
 
 ```bash
-# starting up the container 
-sudo docker run -p 8080:8080 app
+# Starting up the container 
+sudo docker run -p app
 ```
 
 ## Running with docker and kubernetes
 
 To run the server on a Docker container using Kubernetes follow the steps:
-
+First we need to build, push and apply the image of the MongoDB database to the kubernetes clusters:
 ```bash
-# build the image 
+# Build the database image (download it first in dockerhub) 
+# It's worth noticing that MongoDB version 5.0 is not supported by the server. 
+# The version used was MongoDB 4.4.0 
+sudo docker build -t registry.deti:5000/saudade/mongodb:v2
+
+# Push the image to the server
+sudo docker push registry.deti:5000/saudade/mongodb:v2 
+
+# And finally apply in kubernetes registry
+kubectl apply -f mongo.yml
+```
+then build, push and apply the image of the Application to the kubernetes clusters:
+```bash
+# Build the image 
 sudo docker build -t registry.deti:5000/saudade/payment:v1 . 
 
-# push the image to the server
+# Push the image to the server
 sudo docker push registry.deti:5000/saudade/payment:v1 
 
-# create a new secret for use with Docker registries
+# Create a new secret for use with Docker registries
 ./create.sh
 
-# create and update resources in the registry
+# Create and update resources in the registry
 kubectl apply -f deployment.yaml
 ```
 

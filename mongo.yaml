@@ -4,7 +4,7 @@ metadata:
   name: mariadb-pv-claim
   namespace: saudade
   labels:
-    app: mariadb-notify
+    app: mongodb-payment
 spec:
   accessModes:
     - ReadWriteOnce
@@ -15,17 +15,17 @@ spec:
 apiVersion: apps/v1
 kind: Deployment # what to create?
 metadata:
-  name: mariadb-notify
+  name: mongodb-payment
   namespace: saudade
 spec: # specification for deployment resource
   replicas: 1 # how many replicas of pods we want to create
   selector:
     matchLabels:
-      app: mariadb-notify
+      app: mongodb-payment
   template: # blueprint for pods
     metadata:
       labels:
-        app: mariadb-notify # service will look for this label
+        app: mongodb-payment # service will look for this label
     spec: # specification for pods
       containers: # we can have one or more containers
       - name: mariadb
@@ -47,7 +47,7 @@ metadata:
   namespace: saudade
 spec:
   selector:
-    app: mariadb-notify
+    app: mongodb-payment
   ports:
     - protocol: TCP
       port: 27017
