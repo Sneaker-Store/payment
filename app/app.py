@@ -10,10 +10,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.debug = True
 
-with open("/tmp/secret", 'r') as f:
-    secret = f.read()
+#with open("/tmp/secret", 'r') as f:
+#    secret = f.read()
 
-app.config['MONGO_URI'] = secret
+app.config['MONGODB_SETTINGS'] = {
+    'host':'mongodb://paymentmongodb:27017/payment'
+}
 
 db = MongoEngine(app)
 CORS(app)

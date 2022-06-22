@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mariadb-pv-claim
+  name: mongodb-pv-claim
   namespace: saudade
   labels:
     app: mongodb-payment
@@ -33,12 +33,12 @@ spec: # specification for deployment resource
         ports:
         - containerPort: 27017
         volumeMounts:
-        - name: mariadb-pv
+        - name: mongodb-pv
           mountPath: /var/lib/mysql
       volumes:
-      - name: mariadb-pv
+      - name: mongodb-pv
         persistentVolumeClaim:
-          claimName: mariadb-pv-claim
+          claimName: mongodb-pv-claim
 ---
 apiVersion: v1
 kind: Service

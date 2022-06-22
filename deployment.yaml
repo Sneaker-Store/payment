@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: payment
-        image: registry.deti:5000/saudade/payment:latest
+        image: registry.deti:5000/saudade/payment:latestv3
         resources:
           requests:
             memory: "32Mi"
